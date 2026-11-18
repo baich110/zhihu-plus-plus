@@ -64,7 +64,11 @@ fun VotersSheet(
     onNavigate: (Person) -> Unit,
 ) {
     if (!show) return
-    MyModalBottomSheet(onDismissRequest = onDismissRequest) {
+    MyModalBottomSheet(
+        onDismissRequest = onDismissRequest,
+        // 无障碍：读屏进入弹层时先念「赞同者」，知道自己在哪。
+        paneTitle = "赞同者",
+    ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -179,11 +183,16 @@ private fun VoterRow(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
-            .clickable(onClick = onClick),
+            // 无障碍：ListItem 自带合并语义，这里补点击提示。
+            .clickable(
+                onClickLabel = "双击以查看${voter.name}的主页",
+                onClick = onClick,
+            ),
         leadingContent = {
             AsyncImage(
                 model = voter.avatarUrl,
-                contentDescription = "${voter.name}的头像",
+                // 无障碍：ListItem 已合并，头像描述会和用户名重复，置空。
+                contentDescription = null,
                 modifier = Modifier
                     .size(40.dp)
                     .clip(CircleShape),

@@ -441,7 +441,10 @@ fun ReadingQueueSheet(
                     modifier = Modifier
                         .fillMaxWidth()
                         .testTag(readingQueueItemTag(index))
-                        .clickable { onItemClick(index, item) },
+                        // 无障碍：ListItem 自带合并语义，补点击提示和当前播放状态。
+                        .clickable(
+                            onClickLabel = "双击以播放第${index + 1}项",
+                        ) { onItemClick(index, item) },
                 )
             }
         }

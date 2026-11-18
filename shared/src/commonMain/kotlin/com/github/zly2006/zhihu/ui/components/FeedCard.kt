@@ -60,7 +60,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.CustomAccessibilityAction
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -88,6 +91,8 @@ import com.github.zly2006.zhihu.platform.UserMessageDuration
 import com.github.zly2006.zhihu.platform.rememberSettingsStore
 import com.github.zly2006.zhihu.platform.rememberUserMessageSink
 import com.github.zly2006.zhihu.ui.LocalSelectedContentDestination
+import com.github.zly2006.zhihu.ui.a11y.toAccessibilityLabel
+import com.github.zly2006.zhihu.ui.a11y.toClickLabel
 import com.github.zly2006.zhihu.ui.subscreens.PREF_FONT_SIZE
 import com.github.zly2006.zhihu.ui.subscreens.PREF_LINE_HEIGHT
 import com.github.zly2006.zhihu.util.parseEmphasizedHtmlTextWithTheme
@@ -169,14 +174,27 @@ fun FeedCard(
         Column(
             modifier = modifier
                 .fillMaxWidth()
-                .semantics { selected = isSelected }
                 .then(if (isSelected) Modifier.background(selectedContainerColor) else Modifier)
                 .then(if (showPinImages || duo3CardLayout) Modifier else Modifier.heightIn(max = maxHeight)),
         ) {
             Column(
+                // 无障碍：整张卡片合并成一个焦点，读屏一次性念完整描述，
+                // 而不是把头像、昵称、标题、摘要拆成十几个独立焦点让用户逐个划。
+                // 同时把右上角那个 24dp 的「更多选项」按钮收进动作菜单，
+                // 读屏用户不必为了点它多划好几下。
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable { performClick(item) }
+                    .semantics(mergeDescendants = true) {
+                        contentDescription = item.toAccessibilityLabel()
+                        customActions = listOf(
+                            CustomAccessibilityAction("更多选项") {
+                                showMenu = true
+                                true
+                            },
+                        )
+                    }.clickable(
+                        onClickLabel = item.toClickLabel(),
+                    ) { performClick(item) }
                     .padding(horizontal = horizontalPadding, vertical = 12.dp),
             ) {
                 FeedCardContent(
@@ -198,7 +216,6 @@ fun FeedCard(
         Box(
             modifier = modifier
                 .fillMaxWidth()
-                .semantics { selected = isSelected }
                 .then(if (showPinImages || duo3CardLayout) Modifier else Modifier.heightIn(max = maxHeight))
                 .padding(horizontal = horizontalPadding, vertical = 8.dp),
         ) {
@@ -213,10 +230,21 @@ fun FeedCard(
                     CardDefaults.cardColors()
                 },
                 shape = if (duo3CardAppearance) RoundedCornerShape(24.dp) else CardDefaults.shape,
+                // 无障碍：与 divider 分支一致，整卡合并成一个焦点。
                 modifier = Modifier
                     .fillMaxWidth()
                     .let { if (duo3CardAppearance) it.clip(RoundedCornerShape(24.dp)) else it }
-                    .clickable { performClick(item) },
+                    .semantics(mergeDescendants = true) {
+                        contentDescription = item.toAccessibilityLabel()
+                        customActions = listOf(
+                            CustomAccessibilityAction("更多选项") {
+                                showMenu = true
+                                true
+                            },
+                        )
+                    }.clickable(
+                        onClickLabel = item.toClickLabel(),
+                    ) { performClick(item) },
                 elevation = if (duo3CardAppearance) {
                     CardDefaults.cardElevation()
                 } else {
@@ -366,7 +394,9 @@ private fun FeedCardContent(
                     Spacer(modifier = Modifier.width(8.dp))
                     AsyncImage(
                         model = thumbnailModel,
-                        contentDescription = "Thumbnail",
+                        // 无障碍：缩略图属于装饰性内容，卡片整体已有完整描述，
+                        // 这里置空避免读屏重复念「图片」。
+                        contentDescription = null,
                         modifier = Modifier
                             .padding(top = 8.dp)
                             .sizeIn(maxHeight = 80.dp, maxWidth = 128.dp)
@@ -397,11 +427,14 @@ private fun FeedCardContent(
                                 verticalAlignment = Alignment.CenterVertically,
                                 modifier = Modifier
                                     .weight(1f, fill = false)
-                                    .clickable {},
+                                    // 无障碍：原代码是 clickable {}，空 lambda 可点却无动作，
+                                    // 读屏会把它当成按钮念但不响应双击。这里清空语义，
+                                    // 让作者名作为纯文本随卡片一起朗读。
+                                    .clearAndSetSemantics {},
                             ) {
                                 AsyncImage(
                                     model = avatarSrc,
-                                    contentDescription = "Avatar",
+                                    contentDescription = null,
                                     modifier = Modifier
                                         .clip(CircleShape)
                                         .size(24.dp),
@@ -462,11 +495,12 @@ private fun FeedCardContent(
             Spacer(Modifier.height(4.dp))
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.clickable {},
+                // 无障碍：空 clickable 会让读屏当成按钮却不响应，改为清空语义。
+                modifier = Modifier.clearAndSetSemantics {},
             ) {
                 AsyncImage(
                     model = avatarSrc,
-                    contentDescription = "Avatar",
+                    contentDescription = null,
                     modifier = Modifier
                         .clip(CircleShape)
                         .size(20.dp),
@@ -521,7 +555,8 @@ private fun FeedCardContent(
                 Spacer(modifier = Modifier.width(8.dp))
                 AsyncImage(
                     model = thumbnailModel,
-                    contentDescription = "Thumbnail",
+                    // 无障碍：装饰性缩略图，卡片整体已有描述。
+                    contentDescription = null,
                     modifier = Modifier
                         .weight(1f)
                         .sizeIn(maxWidth = 60.dp)

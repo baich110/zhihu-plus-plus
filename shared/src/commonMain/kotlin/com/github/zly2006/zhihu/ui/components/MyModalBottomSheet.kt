@@ -114,6 +114,16 @@ fun MyModalBottomSheet(
     contentWindowInsets: @Composable () -> WindowInsets = { BottomSheetDefaults.windowInsets },
     properties: ModalBottomSheetProperties = ModalBottomSheetProperties(),
     usePlatformWindow: Boolean = true,
+    /**
+     * 无障碍：弹层的窗格标题。
+     *
+     * 读屏进入弹层时会先念这个标题，让用户知道当前打开的是什么。
+     * 不传则退回 Material3 的通用话术（「底部面板」之类），
+     * 用户无法区分「分享」「收藏夹」「更多操作」等不同弹层。
+     *
+     * 建议传业务名称，例如「分享」「选择收藏夹」「更多操作」。
+     */
+    paneTitle: String? = null,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val settings = rememberSettingsStore()
@@ -173,6 +183,8 @@ fun MyModalBottomSheet(
                 tonalElevation = tonalElevation,
                 dragHandle = dragHandle,
                 contentWindowInsets = contentWindowInsets,
+                // 无障碍：把业务标题透传给内部 BottomSheet，读屏进入弹层时先念它。
+                paneTitle = paneTitle,
                 content = content,
             )
         }
@@ -250,6 +262,8 @@ fun BottomSheet(
     contentColor: Color = contentColorFor(containerColor),
     tonalElevation: Dp = BottomSheetDefaults.Elevation,
     shadowElevation: Dp = 0.dp,
+    /** 无障碍：窗格标题。为空时退回 Material3 通用话术。 */
+    paneTitle: String? = null,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val anchoredDraggableMotion: FiniteAnimationSpec<Float> =
@@ -267,7 +281,7 @@ fun BottomSheet(
         state.anchoredDraggableMotionSpec = anchoredDraggableMotion
     }
 
-    val bottomSheetPaneTitle = getString(string = Strings.BottomSheetPaneTitle)
+    val bottomSheetPaneTitle = paneTitle ?: getString(string = Strings.BottomSheetPaneTitle)
 
     Surface(
         modifier =

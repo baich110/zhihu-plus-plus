@@ -82,6 +82,7 @@ import com.github.zly2006.zhihu.data.DailyStory
 import com.github.zly2006.zhihu.data.fetchDailyStoryDestination
 import com.github.zly2006.zhihu.navigation.LocalNavigator
 import com.github.zly2006.zhihu.platform.isLiteVariant
+import com.github.zly2006.zhihu.ui.a11y.a11yHeading
 import com.github.zly2006.zhihu.ui.components.pageTurnViewportWithGuide
 import com.github.zly2006.zhihu.ui.components.rememberPageTurnTarget
 import com.github.zly2006.zhihu.util.formatDailyDate
@@ -248,7 +249,10 @@ fun DailyScreen(
                             style = MaterialTheme.typography.titleLarge.copy(
                                 fontWeight = FontWeight.Bold,
                             ),
-                            modifier = Modifier.testTag(DAILY_SCREEN_TITLE_TAG),
+                            // 无障碍：页面主标题标记为 heading。
+                            modifier = Modifier
+                                .testTag(DAILY_SCREEN_TITLE_TAG)
+                                .a11yHeading(),
                         )
                         if (currentViewingDate.isNotEmpty()) {
                             Text(

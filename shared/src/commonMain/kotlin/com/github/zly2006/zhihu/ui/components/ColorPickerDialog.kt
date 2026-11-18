@@ -46,6 +46,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import kotlin.math.roundToInt
 
@@ -181,12 +183,68 @@ private fun PresetColor(
     color: Color,
     onSelect: (Color) -> Unit,
 ) {
+    // 无障碍：色块是纯视觉元素，读屏看不见颜色。把 RGB 转成可朗读的中文描述，
+    // 否则用户只能听到一串「按钮」，完全不知道选的是什么颜色。
+    val colorLabel = describeColor(color)
     Box(
         modifier = Modifier
             .size(40.dp)
             .clip(CircleShape)
             .background(color)
             .border(1.dp, MaterialTheme.colorScheme.outline, CircleShape)
-            .clickable { onSelect(color) },
+            .semantics { contentDescription = colorLabel }
+            .clickable(
+                onClickLabel = "双击以选择$colorLabel",
+            ) { onSelect(color) },
     )
+}
+
+/**
+ * 把颜色转成适合朗读的中文描述。
+ *
+ * 先判断是否为常见纯色（红绿蓝黑白灰），否则按色相归类并给出深浅。
+ * 例：`#F57C00` → 「橙色」，`#2196F3` → 「蓝色」，`#222222` → 「深灰」。
+ */
+private fun describeColor(color: Color): String {
+    val r = (color.red * 255).roundToInt()
+    val g = (color.green * 255).roundToInt()
+    val b = (color.blue * 255).roundToInt()
+    val max = maxOf(r, g, b)
+    val min = minOf(r, g, b)
+    val delta = max - min
+
+    // 低饱和度：黑白灰
+    if (delta < 24) {
+        return when {
+            max < 50 -> "黑色"
+            max < 110 -> "深灰"
+            max < 180 -> "灰色"
+            max < 235 -> "浅灰"
+            else -> "白色"
+        }
+    }
+
+    // 按色相归类
+    val hue = when {
+        max == r -> (60.0 * (g - b) / delta + 360) % 360
+        max == g -> 60.0 * (b - r) / delta + 120
+        else -> 60.0 * (r - g) / delta + 240
+    }
+    val base = when {
+        hue < 15 || hue >= 345 -> "红色"
+        hue < 45 -> "橙色"
+        hue < 70 -> "黄色"
+        hue < 165 -> "绿色"
+        hue < 195 -> "青色"
+        hue < 255 -> "蓝色"
+        hue < 285 -> "紫色"
+        hue < 345 -> "粉色"
+        else -> "红色"
+    }
+    val tone = when {
+        max < 90 -> "深"
+        max > 220 && delta < 90 -> "浅"
+        else -> ""
+    }
+    return tone + base
 }

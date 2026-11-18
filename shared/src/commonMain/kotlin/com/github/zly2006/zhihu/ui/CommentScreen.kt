@@ -120,6 +120,8 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.LinkAnnotation
 import androidx.compose.ui.text.SpanStyle
@@ -775,7 +777,12 @@ fun CommentScreen(
                     when {
                         viewModel.isLoading && viewModel.allData.isEmpty() -> {
                             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                                CircularProgressIndicator()
+                                // 无障碍：光转圈读屏只会念「进度条」，补一句说明在等什么。
+                                CircularProgressIndicator(
+                                    modifier = Modifier.semantics {
+                                        contentDescription = "正在加载评论"
+                                    },
+                                )
                             }
                         }
 

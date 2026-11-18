@@ -90,6 +90,7 @@ import com.github.zly2006.zhihu.navigation.Topic
 import com.github.zly2006.zhihu.navigation.WritePin
 import com.github.zly2006.zhihu.platform.rememberSettingsStore
 import com.github.zly2006.zhihu.platform.rememberUserMessageSink
+import com.github.zly2006.zhihu.ui.a11y.a11yHeading
 import com.github.zly2006.zhihu.ui.components.FeedCard
 import com.github.zly2006.zhihu.ui.components.PaginatedList
 import com.github.zly2006.zhihu.ui.components.ProgressIndicatorFooter
@@ -591,7 +592,12 @@ private fun TopicHeader(
             )
             Spacer(Modifier.width(16.dp))
             Column {
-                Text(detail?.name?.ifBlank { destination.name } ?: destination.name, style = MaterialTheme.typography.headlineSmall)
+                Text(
+                    detail?.name?.ifBlank { destination.name } ?: destination.name,
+                    style = MaterialTheme.typography.headlineSmall,
+                    // 无障碍：话题名是页面主标题，标记 heading。
+                    modifier = Modifier.a11yHeading(),
+                )
                 when {
                     detail != null -> Text(
                         listOfNotNull(

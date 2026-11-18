@@ -468,6 +468,8 @@ fun ArticleActionsMenu(
         MyModalBottomSheet(
             onDismissRequest = onDismissRequest,
             sheetState = sheetState,
+            // 无障碍：读屏进入弹层时先念「更多操作」。
+            paneTitle = "更多操作",
         ) {
             Column(
                 modifier = Modifier

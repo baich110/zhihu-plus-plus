@@ -111,6 +111,7 @@ import com.github.zly2006.zhihu.platform.rememberSettingsStore
 import com.github.zly2006.zhihu.platform.rememberUserMessageSink
 import com.github.zly2006.zhihu.platform.rememberZhihuWebUrlOpener
 import com.github.zly2006.zhihu.reading.RegisterReadingQueueSource
+import com.github.zly2006.zhihu.ui.a11y.a11yHeading
 import com.github.zly2006.zhihu.ui.components.CommentScreenComponent
 import com.github.zly2006.zhihu.ui.components.FeedCard
 import com.github.zly2006.zhihu.ui.components.FeedPullToRefresh
@@ -420,7 +421,11 @@ private fun QuestionHeaderSection(
                 text = title,
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
-                modifier = Modifier.testTag(QUESTION_TITLE_TAG),
+                // 无障碍：问题标题标记为 heading，读屏可按标题快速跳转。
+                // 长回答页动辄几十屏，没有标题导航只能一屏屏划。
+                modifier = Modifier
+                    .testTag(QUESTION_TITLE_TAG)
+                    .a11yHeading(),
             )
         }
         Row(

@@ -60,6 +60,8 @@ internal fun ArticleSummarySheet(
     MyModalBottomSheet(
         onDismissRequest = onDismissRequest,
         sheetState = sheetState,
+        // 无障碍：读屏进入弹层时先念「总结本文」。
+        paneTitle = "总结本文",
     ) {
         Column(
             modifier = Modifier
@@ -116,6 +118,8 @@ internal fun AigcFlagSheet(
     MyModalBottomSheet(
         onDismissRequest = onDismissRequest,
         sheetState = sheetState,
+        // 无障碍：读屏进入弹层时先念「标记疑似 AIGC」。
+        paneTitle = "标记疑似 AIGC",
     ) {
         Column(
             modifier = Modifier

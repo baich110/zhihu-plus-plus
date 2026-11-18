@@ -103,6 +103,7 @@ import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.progressBarRangeInfo
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -516,7 +517,10 @@ fun ArticleScreen(
                                             .padding(if (expanded) PaddingValues(end = 16.dp) else PaddingValues())
                                             .let {
                                                 if (article.type == ArticleType.Answer && viewModel.questionId != 0L) {
-                                                    it.clickable {
+                                                    // 无障碍：点标题跳到问题页，补 onClickLabel 让读屏知道点了会发生什么。
+                                                    it.clickable(
+                                                        onClickLabel = "双击以打开所属问题",
+                                                    ) {
                                                         navigator.onNavigate(Question(viewModel.questionId, viewModel.title))
                                                     }
                                                 } else {
@@ -535,7 +539,11 @@ fun ArticleScreen(
                                         .padding(if (expanded) PaddingValues(vertical = 16.dp) else PaddingValues(top = 2.dp, bottom = 8.dp))
                                         .padding(end = 16.dp)
                                         .fillMaxWidth()
-                                        .clickable(enabled = viewModel.authorId.isNotBlank() || viewModel.authorUrlToken.isNotBlank()) {
+                                        .clickable(
+                                            enabled = viewModel.authorId.isNotBlank() || viewModel.authorUrlToken.isNotBlank(),
+                                            // 无障碍：点作者行跳到个人主页，补 onClickLabel。
+                                            onClickLabel = "双击以查看作者主页",
+                                        ) {
                                             navigator.onNavigate(
                                                 com.github.zly2006.zhihu.navigation.Person(
                                                     id = viewModel.authorId,
@@ -673,9 +681,14 @@ fun ArticleScreen(
                                                 colors = voteUpNeutralButtonColors(),
                                                 shape = RectangleShape,
                                                 contentPadding = PaddingValues(horizontal = 0.dp),
+                                                // 无障碍：补状态说明，读屏念「赞同 1234，未赞同」。
+                                                modifier = Modifier.semantics {
+                                                    contentDescription = "赞同 ${viewModel.voteUpCount}"
+                                                    stateDescription = "未赞同"
+                                                },
                                             ) {
                                                 Spacer(modifier = Modifier.width(4.dp))
-                                                Icon(painterResource(Res.drawable.ic_vote_up_24dp), "赞同")
+                                                Icon(painterResource(Res.drawable.ic_vote_up_24dp), null)
                                                 Spacer(modifier = Modifier.width(4.dp))
                                                 Text(text = viewModel.voteUpCount.toString())
                                             }
@@ -683,10 +696,13 @@ fun ArticleScreen(
                                                 onClick = { viewModel.toggleVoteUp(environment, VoteUpState.Down) },
                                                 colors = voteUpNeutralButtonColors(),
                                                 shape = RectangleShape,
-                                                modifier = Modifier.height(ButtonDefaults.MinHeight).width(ButtonDefaults.MinHeight),
+                                                modifier = Modifier
+                                                    .height(ButtonDefaults.MinHeight)
+                                                    .width(ButtonDefaults.MinHeight)
+                                                    .semantics { contentDescription = "反对" },
                                                 contentPadding = PaddingValues(horizontal = 0.dp),
                                             ) {
-                                                Icon(painterResource(Res.drawable.ic_vote_down_24dp), "反对")
+                                                Icon(painterResource(Res.drawable.ic_vote_down_24dp), null)
                                             }
                                         }
 
@@ -696,9 +712,14 @@ fun ArticleScreen(
                                                 colors = voteUpActiveButtonColors(),
                                                 shape = RectangleShape,
                                                 contentPadding = PaddingValues(horizontal = 0.dp),
+                                                // 无障碍：已赞同状态，读屏念「赞同 1234，已赞同，双击以取消」。
+                                                modifier = Modifier.semantics {
+                                                    contentDescription = "赞同 ${viewModel.voteUpCount}"
+                                                    stateDescription = "已赞同"
+                                                },
                                             ) {
                                                 Spacer(modifier = Modifier.width(4.dp))
-                                                Icon(painterResource(Res.drawable.ic_vote_up_24dp), "赞同")
+                                                Icon(painterResource(Res.drawable.ic_vote_up_24dp), null)
                                                 Spacer(modifier = Modifier.width(4.dp))
                                                 Text(text = viewModel.voteUpCount.toString())
                                                 Spacer(modifier = Modifier.width(8.dp))
@@ -710,10 +731,15 @@ fun ArticleScreen(
                                                 onClick = { viewModel.toggleVoteUp(environment, VoteUpState.Neutral) },
                                                 colors = voteUpActiveButtonColors(),
                                                 shape = RectangleShape,
-                                                modifier = Modifier.height(ButtonDefaults.MinHeight),
+                                                modifier = Modifier
+                                                    .height(ButtonDefaults.MinHeight)
+                                                    .semantics {
+                                                        contentDescription = "反对"
+                                                        stateDescription = "已反对"
+                                                    },
                                                 contentPadding = PaddingValues(horizontal = 0.dp),
                                             ) {
-                                                Icon(painterResource(Res.drawable.ic_vote_down_24dp), "反对")
+                                                Icon(painterResource(Res.drawable.ic_vote_down_24dp), null)
                                                 Spacer(modifier = Modifier.width(4.dp))
                                                 Text("反对")
                                                 Spacer(modifier = Modifier.width(8.dp))
@@ -728,15 +754,24 @@ fun ArticleScreen(
                                             containerColor = if (viewModel.isFavorited) Color(0xFFF57C00) else MaterialTheme.colorScheme.secondaryContainer,
                                             contentColor = if (viewModel.isFavorited) Color.White else MaterialTheme.colorScheme.onSecondaryContainer,
                                         ),
+                                        // 无障碍：收藏按钮原来只念「收藏」，不知道当前是否已收藏。
+                                        modifier = Modifier.semantics {
+                                            contentDescription = "收藏"
+                                            stateDescription = if (viewModel.isFavorited) "已收藏" else "未收藏"
+                                        },
                                     ) {
-                                        Icon(if (viewModel.isFavorited) Icons.Filled.Bookmark else Icons.Filled.BookmarkBorder, contentDescription = "收藏")
+                                        Icon(if (viewModel.isFavorited) Icons.Filled.Bookmark else Icons.Filled.BookmarkBorder, null)
                                     }
                                     Button(
                                         onClick = { showComments = true },
                                         contentPadding = PaddingValues(start = 8.dp, end = 12.dp),
                                         colors = voteUpNeutralButtonColors(),
+                                        // 无障碍：原来只念数字，补上「评论」和总数。
+                                        modifier = Modifier.semantics {
+                                            contentDescription = "评论 ${viewModel.commentCount}"
+                                        },
                                     ) {
-                                        Icon(Icons.AutoMirrored.Filled.Comment, contentDescription = "评论")
+                                        Icon(Icons.AutoMirrored.Filled.Comment, null)
                                         Spacer(modifier = Modifier.width(4.dp))
                                         Text(text = "${viewModel.commentCount}")
                                     }

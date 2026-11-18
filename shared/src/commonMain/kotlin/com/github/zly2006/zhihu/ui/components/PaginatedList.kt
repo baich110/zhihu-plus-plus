@@ -39,9 +39,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.github.zly2006.zhihu.platform.rememberSettingsStore
+import com.github.zly2006.zhihu.ui.a11y.a11yTraversalGroup
 import com.github.zly2006.zhihu.ui.rememberObservedSetting
 import com.github.zly2006.zhihu.ui.subscreens.DEFAULT_SHOW_CONTENT_END_MARKER
 import com.github.zly2006.zhihu.ui.subscreens.PREF_SHOW_CONTENT_END_MARKER
@@ -56,7 +59,12 @@ val ProgressIndicatorFooter: @Composable (LazyListState) -> Unit = { state ->
         contentAlignment = Alignment.Center,
     ) {
         if (LocalPullToRefreshViewModel.current?.isPullToRefresh != true) {
-            CircularProgressIndicator()
+            // 无障碍：列表底部的加载指示器，补语义说明，避免读屏只念「进度条」。
+            CircularProgressIndicator(
+                modifier = Modifier.semantics {
+                    contentDescription = "正在加载更多"
+                },
+            )
         }
     }
 }
@@ -159,7 +167,9 @@ fun <T> PaginatedList(
 
     LazyColumn(
         state = listState,
-        modifier = modifier,
+        // 无障碍：把整个列表标记为遍历组，读屏会按视觉顺序在列表内逐个聚焦，
+        // 不会因为语义树层级问题出现「划到下面又跳回上面」。
+        modifier = modifier.a11yTraversalGroup(),
         contentPadding = contentPadding,
         reverseLayout = reverseLayout,
     ) {

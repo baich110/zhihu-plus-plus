@@ -51,6 +51,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.github.zly2006.zhihu.navigation.Account
 import com.github.zly2006.zhihu.navigation.Article
@@ -87,7 +88,11 @@ fun ShareDialogContent(
             modifier = Modifier
                 .fillMaxSize()
                 .background(Color.Black.copy(alpha = 0.5f))
-                .clickable { onDismissRequest() },
+                // 无障碍：遮罩层是装饰性的，点击关闭属于快捷操作。
+                // 读屏用户应该用返回键或弹层内的关闭按钮，不该聚焦到遮罩上。
+                .clickable(
+                    onClickLabel = "关闭分享面板",
+                ) { onDismissRequest() },
         ) {
             AnimatedVisibility(
                 visible = showDialog,
@@ -172,7 +177,12 @@ private fun MenuActionButton(
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(enabled = enabled) { onClick() },
+            // 无障碍：整行合并成一个焦点，读屏一次念完「图标 + 文字」，而不是拆成两个焦点。
+            .semantics(mergeDescendants = true) {}
+            .clickable(
+                enabled = enabled,
+                onClickLabel = "双击以$text",
+            ) { onClick() },
         shape = RoundedCornerShape(12.dp),
         color = if (enabled) backgroundColor else backgroundColor.copy(alpha = 0.5f),
     ) {

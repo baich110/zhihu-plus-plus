@@ -58,6 +58,7 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInRoot
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.github.zly2006.zhihu.util.ProvideContentColorTextStyle
 import kotlinx.coroutines.delay
@@ -392,8 +393,14 @@ fun SettingItem(
                     onPositioned = onPositioned,
                     bringIntoViewRequester = bringIntoViewRequester,
                     shape = shape,
-                ).clickable(
+                )
+                // 无障碍：整行合并成一个焦点，读屏一次念完「标题，说明，开关状态」，
+                // 而不是把图标、标题、说明、开关拆成四个焦点让用户逐个划。
+                .semantics(mergeDescendants = true) {}
+                .clickable(
                     enabled = enabled,
+                    // 无障碍：补点击提示，读屏会念「双击以打开」。
+                    onClickLabel = "双击以打开",
                     onClick = onClick,
                 )
         } else {
